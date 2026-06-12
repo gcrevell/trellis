@@ -15,11 +15,11 @@ There are no tests in this project.
 
 ## Architecture
 
-This is a Home Assistant custom card boilerplate built on Preact + zustand + styled-components.
+This is a Home Assistant custom card boilerplate built on Preact + zustand + CSS Modules.
 
 **Data flow:** Home Assistant calls `set hass()` and `setConfig()` on the `BoilerplateCard` web component (`src/index.tsx`). Both methods write directly into the zustand store (`src/store.ts`), which triggers reactive re-renders of the Preact tree.
 
-**Web component → Preact bridge** (`src/index.tsx`): `BoilerplateCard extends HTMLElement` wraps the Preact render. `StyleSheetManager` is pointed at the custom element itself so styled-components injects styles into the shadow-like DOM node, keeping styles encapsulated.
+**Web component → Preact bridge** (`src/index.tsx`): `BoilerplateCard extends HTMLElement` wraps the Preact render. HA custom cards render into the light DOM (no shadow root), so styles injected into `<head>` by style-loader work without any special scoping wrapper.
 
 **Hooks** (`src/hooks/`): All hooks read from the zustand store. They are the primary interface for card components:
 - `useEntity` / `useEntities` — reactive selectors over `hass.states`
@@ -30,6 +30,8 @@ This is a Home Assistant custom card boilerplate built on Preact + zustand + sty
 
 **Path aliases** (tsconfig `baseUrl: "."` + `"*": ["./src/*"]`): Imports like `import store from 'store'` resolve to `src/store.ts`. webpack mirrors this via `tsconfig-paths-webpack-plugin`.
 
+**CSS Modules** (`webpack.config.js`): `.module.css` files are processed by css-loader (with `esModule: false` to fix webpack harmony import interop) and injected at runtime by style-loader. Class names are generated as `[local]--[hash:base64:5]`. The TypeScript declaration for `*.module.css` imports lives in `src/declarations.d.ts`.
+
 **Preact/React aliasing** (webpack config): `react` and `react-dom` are aliased to `preact/compat`, so React-ecosystem libraries work without modification.
 
 **ESLint** (`eslint.config.mjs`): ESLint 9 flat config using `typescript-eslint` (unified package) + `eslint-plugin-react` + `eslint-plugin-react-hooks`. No airbnb config — it doesn't support the flat config format.
@@ -37,7 +39,7 @@ This is a Home Assistant custom card boilerplate built on Preact + zustand + sty
 ## Customization entry points
 
 - `src/types.ts` — extend `Config` with your card's YAML config fields
-- `src/card/index.tsx` — the root card component; replace the demo content here
+- `src/card/index.tsx` + `src/card/card.module.css` — the root card component and its styles; replace the demo content here
 - `src/index.tsx` — change `customElements.define('boilerplate-card', ...)` and the `window.customCards` entry to rename the card
 
 ## Deployment

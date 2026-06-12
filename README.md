@@ -6,11 +6,11 @@ A **~55kb** boilerplate card for Home Assistant.
 #### Stack:
 - [TypeScript](https://github.com/microsoft/TypeScript)
 - [zustand](https://github.com/pmndrs/zustand) (state management)
-- [styled-components](https://github.com/styled-components/styled-components) (styles)
+- [CSS Modules](https://github.com/css-modules/css-modules) (styles, via css-loader + style-loader)
 - [custom-card-helpers](https://github.com/custom-cards/custom-card-helpers) (Home Assistant utils + types)
 - [home-assistant-js-websocket](https://github.com/home-assistant/home-assistant-js-websocket) (Home Assistant types)
 - [webpack](https://github.com/webpack/webpack) (build system)
-- [ESLint](https://github.com/eslint/eslint) (linter)
+- [ESLint](https://github.com/eslint/eslint) (linter, using typescript-eslint flat config)
 - [Husky](https://github.com/typicode/husky) (pre-commit hooks)
 
 ## Hooks
@@ -113,7 +113,7 @@ interface HistoryConfig = {
 ...
 
 const Card = () => {
-  const { history, entity } = useConfig(); // { history: Datum[]; entity?: HassEntity }
+  const { history, entity } = useHistory('sun.sun'); // { history: Datum[]; entity?: HassEntity }
 
   return (
     <div style={{ padding: '1rem' }}>
