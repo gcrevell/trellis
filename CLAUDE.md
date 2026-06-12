@@ -5,10 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run build       # Production build → dist/bundle.js
-npm run watch       # Build with file watching
-npm run dev         # Dev server with HMR (serves dist/, allows all hosts for HA integration)
-npm run lint        # ESLint across src/
+yarn build       # Production build → dist/bundle.js
+yarn watch       # Build with file watching
+yarn dev         # Dev server with HMR (serves dist/, allows all hosts for HA integration)
+yarn lint        # ESLint across src/
 ```
 
 There are no tests in this project.
@@ -32,6 +32,8 @@ This is a Home Assistant custom card boilerplate built on Preact + zustand + sty
 
 **Preact/React aliasing** (webpack config): `react` and `react-dom` are aliased to `preact/compat`, so React-ecosystem libraries work without modification.
 
+**ESLint** (`eslint.config.mjs`): ESLint 9 flat config using `typescript-eslint` (unified package) + `eslint-plugin-react` + `eslint-plugin-react-hooks`. No airbnb config — it doesn't support the flat config format.
+
 ## Customization entry points
 
 - `src/types.ts` — extend `Config` with your card's YAML config fields
@@ -40,4 +42,4 @@ This is a Home Assistant custom card boilerplate built on Preact + zustand + sty
 
 ## Deployment
 
-Build produces `dist/bundle.js`. In Home Assistant, add it as a Lovelace resource and reference the card type in dashboard YAML. During development, `npm run dev` starts a webpack dev server that can be added as a resource URL pointing at `http://<your-machine>:8080/bundle.js`.
+Build produces `dist/bundle.js`. In Home Assistant, add it as a Lovelace resource and reference the card type in dashboard YAML. During development, `yarn dev` starts a webpack dev server that can be added as a resource URL pointing at `http://<your-machine>:8080/bundle.js`.

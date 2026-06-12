@@ -1,7 +1,7 @@
 import { useCallback } from 'preact/hooks';
-import store from 'store';
+import { store } from 'store';
 
-const useEntities = (entityIds: string[]) => store(
+export const useEntities = (entityIds: string[]) => store(
   useCallback(
     ({ hass }) => Object.fromEntries(
       entityIds.map(
@@ -11,5 +11,3 @@ const useEntities = (entityIds: string[]) => store(
     [entityIds],
   ),
 );
-
-export default useEntities;

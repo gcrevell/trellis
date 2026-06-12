@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { create } from 'zustand';
 import { HomeAssistant } from 'custom-card-helpers';
 import { Config } from 'types';
 
@@ -7,6 +7,4 @@ interface Store {
   config?: Config;
 }
 
-const store = create<Store>(() => ({}));
-
-export default store;
+export const store = create<Store>(() => ({}));

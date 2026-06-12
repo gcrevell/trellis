@@ -1,7 +1,7 @@
 import { useCallback } from 'preact/hooks';
-import store from 'store';
+import { store } from 'store';
 
-const useUser = () => {
+export const useUser = () => {
   const user = store((state) => state.hass?.user);
   const entity = store(useCallback(
     ({ hass }) => (
@@ -17,5 +17,3 @@ const useUser = () => {
     entity,
   };
 };
-
-export default useUser;
