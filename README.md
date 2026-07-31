@@ -1,7 +1,7 @@
 
-# zupre
+# Room Card
 
-A **~55kb** boilerplate card for Home Assistant.
+A **~55kb** single-room card for Home Assistant.
 
 #### Stack:
 - [TypeScript](https://github.com/microsoft/TypeScript)
