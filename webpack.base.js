@@ -1,5 +1,8 @@
 const path = require('path');
+const { execSync } = require('child_process');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+
+const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim().replace(/[^a-zA-Z0-9-]+/g, '-');
 
 module.exports = {
   entry: './src/index.tsx',
@@ -47,7 +50,7 @@ module.exports = {
     },
   },
   output: {
-    filename: 'bundle.js',
+    filename: `${branch}.js`,
     path: path.resolve(__dirname, 'dist'),
   },
 };
