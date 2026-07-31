@@ -19,7 +19,7 @@ This is a Home Assistant custom card boilerplate built on Preact + zustand + CSS
 
 **Data flow:** Home Assistant calls `set hass()` and `setConfig()` on the `BoilerplateCard` web component (`src/index.tsx`). Both methods write directly into the zustand store (`src/store.ts`), which triggers reactive re-renders of the Preact tree.
 
-**Web component → Preact bridge** (`src/index.tsx`): `BoilerplateCard extends HTMLElement` wraps the Preact render. HA custom cards render into the light DOM (no shadow root), so styles injected into `<head>` by style-loader work without any special scoping wrapper.
+**Web component → Preact bridge** (`src/index.tsx`): `BoilerplateCard extends HTMLElement` wraps the Preact render (into a lazily-created child `<div>`, not `this` directly — DOM mutation isn't allowed inside a custom element's constructor). The card itself renders into light DOM (no shadow root), but HA nests every card several Shadow DOM boundaries deep (`hui-card`, `hui-view`, `home-assistant-main`, ...), so a `<style>` tag injected into `document.head` by style-loader never reaches it — it's a different CSS tree scope. To work around this, style-loader tags its injected `<style>` with `data-card-style` (see `webpack.config.js`), and on first render `BoilerplateCard` clones that tag into its own subtree, so the CSS travels with the card regardless of where HA places it. Verify styling changes against something that actually nests the card in a Shadow DOM ancestor (a plain test page without one will falsely look fine).
 
 **Hooks** (`src/hooks/`): All hooks read from the zustand store. They are the primary interface for card components:
 - `useEntity` / `useEntities` — reactive selectors over `hass.states`

@@ -25,7 +25,14 @@ module.exports = {
       {
         test: /\.module\.css$/,
         use: [
-          'style-loader',
+          {
+            loader: 'style-loader',
+            options: {
+              attributes: {
+                'data-card-style': 'true',
+              },
+            },
+          },
           {
             loader: 'css-loader',
             options: {

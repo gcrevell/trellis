@@ -16,6 +16,7 @@ export default tseslint.config(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
       'react/jsx-filename-extension': ['warn', { extensions: ['.ts', '.tsx'] }],
     },
     settings: {
