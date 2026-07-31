@@ -1,3 +1,3 @@
-import { store } from 'store';
+import { useStore } from 'store';
 
-export const useHass = () => store(({ hass }) => hass);
+export const useHass = () => useStore(({ hass }) => hass);

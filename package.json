@@ -8,6 +8,7 @@
     "watch": "webpack --watch",
     "dev": "webpack serve --open --mode development",
     "lint": "eslint \"src/**\"",
+    "test": "vitest run",
     "prepare": "husky"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "tsconfig-paths-webpack-plugin": "^4.2.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.61.0",
+    "vitest": "^4.1.10",
     "webpack": "^5.107.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.2.4"

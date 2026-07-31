@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { store } from 'store';
+import { useStore } from 'store';
 import { useEntity } from './useEntity';
 
 interface Datum {
@@ -22,7 +22,7 @@ interface HistoryEntry {
 
 export const useHistory = (entityId: string, config?: HistoryConfig) => {
   const entity = useEntity(entityId);
-  const hass = store((state) => state.hass);
+  const hass = useStore((state) => state.hass);
   const [history, setHistory] = useState<Datum[]>([]);
 
   const loadHistory = async () => {

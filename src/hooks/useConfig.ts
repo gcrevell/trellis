@@ -1,3 +1,3 @@
-import { store } from 'store';
+import { useStore } from 'store';
 
-export const useConfig = () => store((state) => state.config);
+export const useConfig = () => useStore((state) => state.config);
