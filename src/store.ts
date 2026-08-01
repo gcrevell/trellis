@@ -2,11 +2,11 @@ import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
 import { create, StoreApi, UseBoundStore } from 'zustand';
 import { HomeAssistant } from 'custom-card-helpers';
-import { Config } from 'types';
+import { BaseConfig } from './types';
 
 interface Store {
   hass?: HomeAssistant;
-  config?: Config;
+  config?: BaseConfig;
 }
 
 // Each card element must get its own store: a module-level singleton here

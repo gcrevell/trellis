@@ -1,4 +1,7 @@
-declare module '*.module.css' {
-  const classes: Record<string, string>;
-  export default classes;
+declare module 'preact/jsx-runtime' {
+  namespace JSX {
+    interface IntrinsicElements {
+      'ha-form': { [key: string]: unknown };
+    }
+  }
 }

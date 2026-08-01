@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createStore } from './store';
-import { Config } from './types';
+import { BaseConfig } from './types';
 
-// Regression coverage for the bug where every <room-card> instance shared one
+interface TestConfig extends BaseConfig {
+  name: string;
+}
+
+// Regression coverage for the bug where every card instance shared one
 // module-level store, so the last card to call setConfig()/set hass() won and
 // every other card on the dashboard rendered its config instead of its own.
 describe('createStore', () => {
@@ -10,19 +14,19 @@ describe('createStore', () => {
     const a = createStore();
     const b = createStore();
 
-    const configA: Config = { type: 'room-card', name: 'Living Room', icon: 'mdi:sofa' };
-    const configB: Config = { type: 'room-card', name: 'Kitchen', icon: 'mdi:silverware-fork-knife' };
+    const configA: TestConfig = { type: 'test-card', name: 'Living Room' };
+    const configB: TestConfig = { type: 'test-card', name: 'Kitchen' };
 
     a.setState({ config: configA });
     b.setState({ config: configB });
 
-    expect(a.getState().config?.name).toBe('Living Room');
-    expect(b.getState().config?.name).toBe('Kitchen');
+    expect((a.getState().config as TestConfig | undefined)?.name).toBe('Living Room');
+    expect((b.getState().config as TestConfig | undefined)?.name).toBe('Kitchen');
   });
 
   it('does not leak state into stores created afterwards', () => {
     const a = createStore();
-    a.setState({ config: { type: 'room-card', name: 'Living Room', icon: 'mdi:sofa' } });
+    a.setState({ config: { type: 'test-card', name: 'Living Room' } as TestConfig });
 
     const b = createStore();
 

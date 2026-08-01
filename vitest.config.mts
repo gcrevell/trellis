@@ -14,9 +14,6 @@ export default defineConfig({
       'react-dom/test-utils': 'preact/test-utils',
       'react-dom': 'preact/compat',
       'react/jsx-runtime': 'preact/jsx-runtime',
-      store: '/src/store.ts',
-      types: '/src/types.ts',
-      hooks: '/src/hooks/index.ts',
     },
   },
 });

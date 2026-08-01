@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { useStore } from 'store';
+import { useStore } from '../store';
 import { useEntity } from './useEntity';
 
 interface Datum {

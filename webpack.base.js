@@ -1,13 +1,12 @@
-const path = require('path');
-const { execSync } = require('child_process');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
-const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim().replace(/[^a-zA-Z0-9-]+/g, '-');
-
-module.exports = {
-  entry: './src/index.tsx',
+// Shared webpack config factory used by every product package's own
+// webpack.config.js, so loader rules and preact/CSS-modules setup live in
+// one place instead of being copy-pasted per card.
+module.exports = ({ entry, outputFilename, outputPath }) => ({
+  entry,
   devServer: {
-    static: './dist',
+    static: outputPath,
     allowedHosts: 'all',
     headers: {
       'Access-Control-Allow-Origin': '*',
@@ -57,7 +56,7 @@ module.exports = {
     },
   },
   output: {
-    filename: `${branch}.js`,
-    path: path.resolve(__dirname, 'dist'),
+    filename: outputFilename,
+    path: outputPath,
   },
-};
+});
