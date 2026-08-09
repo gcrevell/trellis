@@ -38,6 +38,13 @@ module.exports = ({ entry, outputFilename, outputPath }) => {
           exclude: /node_modules/,
         },
         {
+          // Inlined as a base64 data URI rather than emitted as a separate
+          // asset file: a card ships as a single dist/<name>.js, so a
+          // separately-emitted file would never reach Home Assistant.
+          test: /\.png$/,
+          type: 'asset/inline',
+        },
+        {
           test: /\.module\.css$/,
           use: [
             {
