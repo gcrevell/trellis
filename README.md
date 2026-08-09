@@ -10,11 +10,12 @@ and preact aliasing. It builds nothing on its own — card repos compile it as s
 
 #### Stack:
 - [TypeScript](https://github.com/microsoft/TypeScript)
+- [Preact](https://github.com/preactjs/preact) (rendering — not React, see below)
 - [zustand](https://github.com/pmndrs/zustand) (state management)
 - [CSS Modules](https://github.com/css-modules/css-modules) (styles, via css-loader + style-loader)
 - [custom-card-helpers](https://github.com/custom-cards/custom-card-helpers) (Home Assistant utils + types)
 - [home-assistant-js-websocket](https://github.com/home-assistant/home-assistant-js-websocket) (Home Assistant types)
-- [webpack](https://github.com/webpack/webpack) (build system)
+- [webpack](https://github.com/webpack/webpack) (build system for consuming cards, configured by `webpack.base.js`)
 - [ESLint](https://github.com/eslint/eslint) (linter, using typescript-eslint flat config)
 - [Husky](https://github.com/typicode/husky) (pre-commit hooks)
 
@@ -23,6 +24,7 @@ and preact aliasing. It builds nothing on its own — card repos compile it as s
 - [`useEntity`](#useentityentityid-string)
 - [`useEntities`](#useentitiesentityids-string)
 - [`useHistory`](#usehistoryentityid-string-config-historyconfig)
+- [`useForecast`](#useforecastentityid-string-type-forecasttype)
 - [`useUser`](#useuser)
 - [`useHass`](#usehass)
 - [`useConfig`](#useconfig)
@@ -138,6 +140,65 @@ const Card = () => {
 ...
 ```
 
+### `useForecast(entityId?: string, type?: ForecastType)`
+---
+Subscribes to a weather entity's forecast over the Home Assistant websocket connection
+(`weather/subscribe_forecast`) and returns the most recent forecast received. `forecast` is
+`undefined` until the first message arrives, and the subscription is torn down and re-made
+whenever `entityId` or `type` changes.
+
+If the subscription fails — typically a legacy weather integration that never adopted the
+subscription API — it falls back to whatever the entity already publishes in its `forecast`
+state attribute, which costs no extra request. The `get_forecasts` service call is
+deliberately not used.
+
+**Types:**
+
+```ts
+type ForecastType = 'daily' | 'hourly' | 'twice_daily';
+
+interface ForecastAttributes {
+  datetime: string;
+  condition?: string;
+  temperature?: number;
+  templow?: number;
+  precipitation?: number;
+  precipitation_probability?: number;
+  wind_speed?: number;
+  wind_bearing?: number;
+  humidity?: number;
+  is_daytime?: boolean;
+  [key: string]: unknown;
+}
+```
+
+**Returns:** `{ forecast: ForecastAttributes[] | undefined; error: unknown }`
+
+**Example:**
+
+```tsx
+...
+
+const Card = () => {
+  const { forecast } = useForecast('weather.home', 'daily');
+
+  return (
+    <div style={{ padding: '1rem' }}>
+      { forecast?.slice(0, 3).map((day) => (
+        <p key={day.datetime}>
+          { day.condition }
+          :
+          {' '}
+          { day.temperature }
+        </p>
+      )) }
+    </div>
+  );
+};
+
+...
+```
+
 ### `useUser()`
 ---
 Retrieves the currently signed in user and its corresponding `entity`.
@@ -198,9 +259,12 @@ const Card = () => {
 
 ### `useConfig()`
 ---
-Retrieves the current config of the card. Note that `Config` is a type should be customized to the given card's use case.
+Retrieves the current config of the card. Here it is typed as `BaseConfig` — `{ type: string }`,
+the only field every Lovelace card config is guaranteed to have. A consuming card wraps this
+hook locally to cast the result to its own richer config type, rather than threading a type
+parameter through the store and context.
 
-**Returns:** `Config | undefined`
+**Returns:** `BaseConfig | undefined`
 
 **Example:**
 
@@ -208,7 +272,7 @@ Retrieves the current config of the card. Note that `Config` is a type should be
 ...
 
 const Card = () => {
-  const config = useConfig(); // config: Config | undefined
+  const config = useConfig(); // config: BaseConfig | undefined
 
   return (
     <div style={{ padding: '1rem' }}>
