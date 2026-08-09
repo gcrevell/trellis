@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    // Third-party .d.ts files in this dependency tree don't type-check under
+    // moduleResolution: "node" (vitest/vite reference subpath types, and
+    // custom-card-helpers imports lit, which isn't installed). None of that
+    // affects the emitted output, and the build must not fail on it.
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+}

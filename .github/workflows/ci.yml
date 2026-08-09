@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # yarn.lock isn't committed in this repo, so there's nothing to freeze
+      # against here. This also runs `prepare`, which builds — the same path a
+      # consumer takes when it installs this package as a git dependency, so a
+      # break here is a break for consumers too.
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Test
+        run: yarn test
+
+      - name: Build
+        run: yarn build
+
+      # The package is consumed through main/types, so an install that produced
+      # no entry points would otherwise fail confusingly in the consuming card's
+      # webpack build rather than here.
+      - name: Verify build output
+        run: test -f dist/index.js && test -f dist/index.d.ts
