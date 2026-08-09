@@ -1,7 +1,12 @@
 
-# Room Card
+# trellis
 
-A **~55kb** single-room card for Home Assistant.
+The shared base for building Home Assistant custom Lovelace cards with Preact.
+
+Published as the `@zupre/core` package: a zustand store bridged into a Preact context, a
+set of hooks over Home Assistant's state, an `<ha-form>` wrapper for card editors, and a
+webpack config factory (`webpack.base.js`) that card packages call to get the loader rules
+and preact aliasing. It builds nothing on its own — card repos compile it as source.
 
 #### Stack:
 - [TypeScript](https://github.com/microsoft/TypeScript)
