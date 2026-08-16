@@ -1,26 +1,34 @@
+# Pull-request checks. Pushes to main are covered by release.yml, which runs
+# these same checks before it publishes anything.
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  check:
+    name: Lint, test, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history + tags so the release preview below can compare this
+          # branch against the last release tag.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # yarn.lock isn't committed in this repo, so there's nothing to freeze
-      # against here. This also runs `prepare`, which builds — the same path a
-      # consumer takes when it installs this package as a git dependency, so a
-      # break here is a break for consumers too.
+      # This also runs `prepare`, which builds — the same path this repo's own
+      # tooling takes. Note that it is *not* the path a consumer takes: yarn
+      # fetches `github:` dependencies as a codeload tarball and never runs
+      # `prepare` at all, which is why dist/ is committed. See CLAUDE.md.
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile
 
       - name: Lint
         run: yarn lint
@@ -36,3 +44,23 @@ jobs:
       # webpack build rather than here.
       - name: Verify build output
         run: test -f dist/index.js && test -f dist/index.d.ts
+
+      # Tracking a build artifact means it can go stale, so compare the
+      # committed copy against the one just built. `git status` rather than
+      # `git diff` because a new source file emits a new dist file, which is
+      # untracked and so invisible to diff.
+      - name: dist/ is committed and current
+        run: |
+          if [ -n "$(git status --porcelain -- dist)" ]; then
+            echo "::error::dist/ does not match a fresh build. Run 'yarn build' and commit dist/."
+            git status --porcelain -- dist
+            git diff -- dist
+            exit 1
+          fi
+
+      # Not a gate — prints the version this PR would release if merged, so an
+      # unintended major/minor bump is visible in the PR rather than after it.
+      - name: Release preview
+        run: |
+          git fetch --tags --force
+          node scripts/release-plan.mjs

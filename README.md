@@ -6,7 +6,17 @@ The shared base for building Home Assistant custom Lovelace cards with Preact.
 Published as the `@zupre/core` package: a zustand store bridged into a Preact context, a
 set of hooks over Home Assistant's state, an `<ha-form>` wrapper for card editors, and a
 webpack config factory (`webpack.base.js`) that card packages call to get the loader rules
-and preact aliasing. It builds nothing on its own — card repos compile it as source.
+and preact aliasing.
+
+Consumed as a git dependency pinned to a release tag:
+
+```json
+"@zupre/core": "github:gcrevell/trellis#v1.0.0"
+```
+
+Compiled output is committed to `dist/` and shipped with the tag, so an install needs no
+build step of its own. See `CLAUDE.md` for why that is a requirement rather than a
+convenience, and for how versions are cut.
 
 #### Stack:
 - [TypeScript](https://github.com/microsoft/TypeScript)

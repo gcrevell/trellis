@@ -10,9 +10,22 @@ cards are built on: the zustand store + Preact context (`src/store.ts`), the hoo
 type (`{ type: string }`, the only field every Lovelace card config is guaranteed to have),
 and the shared webpack config factory (`webpack.base.js`).
 
-**There is no build script, and that's deliberate.** This package is never bundled on its
-own — consuming card repos compile it as TypeScript source into their own bundle. `main`
-points at `src/index.ts`, not at a `dist/`.
+**This package is built, and `dist/` is committed to git.** `main` is `dist/index.js`,
+`types` is `dist/index.d.ts`, and `yarn build` (tsc) produces both.
+
+Committing a build artifact looks wrong; it is load-bearing. Yarn 1 resolves a
+`github:owner/repo#ref` dependency through its GitHub resolver, which downloads a
+**codeload tarball** of that ref instead of cloning it — and the tarball path never runs
+the package's `prepare` script. So a consumer gets exactly the files tracked in git at that
+ref, and nothing builds anything on the way in. While `dist/` was gitignored, every
+consumer installed a package whose `main` pointed at a file that wasn't there; webpack
+reported it as `Can't resolve '@zupre/core'`, several layers away from the cause. (It looked
+fine locally, because a `file://` git dependency *does* take the clone path and *does* run
+`prepare`.)
+
+Both workflows guard this: they build and then fail if the committed `dist/` differs from
+what was just built. If you change anything under `src/`, run `yarn build` and commit the
+result in the same change.
 
 This repo was split out of [zupre](https://github.com/gcrevell/zupre), which held the base
 and the card products together in one yarn-workspaces monorepo. History before the split is
@@ -22,10 +35,41 @@ restructure) that live in the other repo — only their base-affecting changes a
 ## Commands
 
 ```bash
-yarn install
-yarn lint        # ESLint across src/
-yarn test        # vitest run
+yarn install                    # also runs `prepare`, which builds dist/
+yarn lint                       # ESLint across src/
+yarn test                       # vitest run — src/ and scripts/
+yarn build                      # tsc -p tsconfig.build.json -> dist/
+node scripts/release-plan.mjs   # what a merge to main would release, and why
 ```
+
+## Versioning and releases
+
+Tagged `v<semver>`, one line for the whole package. **The released version lives in the git
+tag, not in a committed file** — `scripts/release-plan.mjs` decides it:
+
+| Situation | Released version |
+|---|---|
+| No tag yet | `package.json`'s version (first release) |
+| PR left `package.json` alone | last tag with **patch + 1** |
+| PR set version *above* the last tag (1.1.0, 2.0.0) | exactly that version |
+| Nothing changed under `src/`, `dist/`, `webpack.base.js`, the tsconfigs, `package.json` or `yarn.lock` | skipped — a docs-only merge cuts no version |
+
+So `package.json`'s `version` is a *floor* — how a human asks for a minor or major bump —
+not a running total. It legitimately goes stale (it may say `1.0.0` while tags are at
+`1.0.7`); the tag is the source of truth. Deriving from tags means CI never commits a
+version bump back, so it can't retrigger itself.
+
+`.github/workflows/ci.yml` runs lint/test/build plus both `dist/` guards on every PR, and
+prints the version a merge would cut. `.github/workflows/release.yml` re-runs all of it on
+merge to `main`, then creates the release — which creates the tag at that merge commit, so a
+tag always points at a verified tree. Each release carries `zupre-core-<version>.tgz` from
+`yarn pack`; that is an escape hatch, not the consumption path.
+
+**Nothing auto-bumps consumers.** A card repo pins `"@zupre/core":
+"github:gcrevell/trellis#v1.0.0"` and moves when it chooses to. That deliberate step is the
+point of leaving `#main` behind — `#main` is a moving target that silently re-resolves on
+every `yarn install`, so a card build was never reproducible and could never say which base
+it was built against.
 
 ## Architecture
 
@@ -65,12 +109,22 @@ ancestor; a plain test page without one will falsely look fine.
 
 ## Consuming this package
 
-A card repo depends on `@zupre/core` and must resolve it **to this source directory, not
-through node_modules package resolution** — ts-loader's rule excludes `node_modules/`, so an
-import resolving through a symlink there would leave core's TypeScript silently uncompiled.
-Map the bare specifier to the checkout path via `compilerOptions.paths` in the consumer's
-`tsconfig.json` (resolved at build time by `tsconfig-paths-webpack-plugin`), so webpack sees
-these files as ordinary first-party source.
+A card repo depends on `@zupre/core` as an ordinary git dependency pinned to a tag:
+
+```json
+"@zupre/core": "github:gcrevell/trellis#v1.0.0"
+```
+
+It resolves through **normal node_modules lookup** — no `compilerOptions.paths` mapping, no
+alias. That works precisely because `dist/` is committed (above): what lands in the
+consumer's `node_modules` is built JavaScript plus declarations, so ts-loader's
+`exclude: /node_modules/` rule is correct rather than a problem. Do not point a consumer at
+this `src/` directory; that was the old arrangement, from when the base was a sibling
+workspace, and it is what the committed build replaces.
+
+Jest is the one exception. `packages/printer-card/jest.config.js` in the card repo maps
+`@zupre/core` to `@zupre/core/src/index.ts`, because tsc emits ES modules that Jest cannot
+`require` — `src/` is in the published `files` list for exactly this reason.
 
 `src/declarations.d.ts` declares the `ha-form` JSX intrinsic so this package type-checks
 standalone. It is never `import`ed by name, so nothing pulls it into a consumer's TypeScript

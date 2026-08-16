@@ -1,0 +1,135 @@
+# Builds, verifies and publishes a GitHub release on every merge to main.
+#
+# Versioning (scripts/release-plan.mjs has the full rationale): the released
+# version comes from the last git tag, not from a committed file.
+#
+#   PR leaves package.json alone   -> patch bump from the last tag
+#   PR sets version to 1.1.0/2.0.0 -> released at exactly that
+#   nothing a consumer would notice changed -> no release
+#
+# Creating the release also creates the tag, at this merge commit — so a tag
+# always points at a tree whose committed dist/ was just verified against a
+# fresh build. That is precisely the property a consumer depends on when it
+# pins `github:gcrevell/trellis#v<semver>`, because yarn fetches that pin as a
+# codeload tarball of the tagged tree and never builds anything itself.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Release even if nothing a consumer would notice has changed
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Two merges landing at once would otherwise compute the same next patch and
+# race to claim the same tag.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # fetch-depth: 0 usually brings tags along, but the whole version
+      # calculation depends on them, so ask explicitly rather than assume.
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # Repeated from ci.yml because a release is the thing that escapes the
+      # repo — it should never be cut from a tree that does not pass its own
+      # checks, and main takes direct pushes, so a PR run is not guaranteed.
+      - name: Lint
+        run: yarn lint
+
+      - name: Test
+        run: yarn test
+
+      - name: Build
+        run: yarn build
+
+      - name: Verify build output
+        run: test -f dist/index.js && test -f dist/index.d.ts
+
+      - name: dist/ is committed and current
+        run: |
+          if [ -n "$(git status --porcelain -- dist)" ]; then
+            echo "::error::dist/ does not match a fresh build. Run 'yarn build' and commit dist/."
+            git status --porcelain -- dist
+            git diff -- dist
+            exit 1
+          fi
+
+      # An empty `version` output means "nothing to release" and every step
+      # below skips — the plan's own reasoning is on stderr, in the log.
+      - name: Plan the release
+        id: plan
+        env:
+          RELEASE_FORCE: ${{ inputs.force }}
+        run: |
+          if [ "$RELEASE_FORCE" = "true" ]; then
+            plan=$(node scripts/release-plan.mjs --force)
+          else
+            plan=$(node scripts/release-plan.mjs)
+          fi
+          echo "$plan" | jq -r '"version=\(.version // "")"' >> "$GITHUB_OUTPUT"
+          echo "$plan" | jq -r '"previous=\(.previous // "")"' >> "$GITHUB_OUTPUT"
+
+      - name: Write release notes
+        if: steps.plan.outputs.version != ''
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          PREVIOUS: ${{ steps.plan.outputs.previous }}
+        run: |
+          if [ -n "$PREVIOUS" ]; then range="v${PREVIOUS}..HEAD"; else range="HEAD"; fi
+          {
+            echo "\`@zupre/core\` ${VERSION}."
+            echo
+            echo '### Changes'
+            echo
+            git log --no-merges --pretty='- %s (%h)' "$range" || echo '- No commits recorded in this range.'
+            echo
+            echo '### Consuming this version'
+            echo
+            echo '```json'
+            echo "\"@zupre/core\": \"github:gcrevell/trellis#v${VERSION}\""
+            echo '```'
+            echo
+            echo 'The attached tarball is an alternative pin for the same tree. It is produced'
+            echo 'by `yarn pack`, so it carries `dist/` regardless of how a client chooses to'
+            echo 'fetch a git dependency.'
+          } > RELEASE_NOTES.md
+
+      # `files` in package.json controls what lands here: dist, src and
+      # webpack.base.js. Not the consumption path — an escape hatch if a
+      # `github:` pin ever misbehaves again.
+      - name: Pack the tarball
+        if: steps.plan.outputs.version != ''
+        run: yarn pack --filename "zupre-core-${{ steps.plan.outputs.version }}.tgz"
+
+      - name: Publish the release
+        if: steps.plan.outputs.version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.plan.outputs.version }}
+          name: v${{ steps.plan.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          files: zupre-core-${{ steps.plan.outputs.version }}.tgz
