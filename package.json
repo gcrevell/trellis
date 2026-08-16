@@ -1,6 +1,6 @@
 {
-  "name": "@zupre/core",
-  "version": "1.0.0",
+  "name": "@trellis/core",
+  "version": "1.1.0",
   "private": true,
   "license": "MIT",
   "main": "dist/index.js",

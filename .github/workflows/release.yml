@@ -101,7 +101,7 @@ jobs:
         run: |
           if [ -n "$PREVIOUS" ]; then range="v${PREVIOUS}..HEAD"; else range="HEAD"; fi
           {
-            echo "\`@zupre/core\` ${VERSION}."
+            echo "\`@trellis/core\` ${VERSION}."
             echo
             echo '### Changes'
             echo
@@ -110,7 +110,7 @@ jobs:
             echo '### Consuming this version'
             echo
             echo '```json'
-            echo "\"@zupre/core\": \"github:gcrevell/trellis#v${VERSION}\""
+            echo "\"@trellis/core\": \"github:gcrevell/trellis#v${VERSION}\""
             echo '```'
             echo
             echo 'The attached tarball is an alternative pin for the same tree. It is produced'
@@ -123,7 +123,7 @@ jobs:
       # `github:` pin ever misbehaves again.
       - name: Pack the tarball
         if: steps.plan.outputs.version != ''
-        run: yarn pack --filename "zupre-core-${{ steps.plan.outputs.version }}.tgz"
+        run: yarn pack --filename "trellis-core-${{ steps.plan.outputs.version }}.tgz"
 
       - name: Publish the release
         if: steps.plan.outputs.version != ''
@@ -132,4 +132,4 @@ jobs:
           tag_name: v${{ steps.plan.outputs.version }}
           name: v${{ steps.plan.outputs.version }}
           body_path: RELEASE_NOTES.md
-          files: zupre-core-${{ steps.plan.outputs.version }}.tgz
+          files: trellis-core-${{ steps.plan.outputs.version }}.tgz

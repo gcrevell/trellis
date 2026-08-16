@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`@zupre/core` — the generic, product-agnostic base that Home Assistant custom Lovelace
+`@trellis/core` — the generic, product-agnostic base that Home Assistant custom Lovelace
 cards are built on: the zustand store + Preact context (`src/store.ts`), the hooks
 (`src/hooks/`), the `<ha-form>` wrapper (`src/editor/HaForm.tsx`), the minimal `BaseConfig`
 type (`{ type: string }`, the only field every Lovelace card config is guaranteed to have),
@@ -19,7 +19,7 @@ Committing a build artifact looks wrong; it is load-bearing. Yarn 1 resolves a
 the package's `prepare` script. So a consumer gets exactly the files tracked in git at that
 ref, and nothing builds anything on the way in. While `dist/` was gitignored, every
 consumer installed a package whose `main` pointed at a file that wasn't there; webpack
-reported it as `Can't resolve '@zupre/core'`, several layers away from the cause. (It looked
+reported it as `Can't resolve '@trellis/core'`, several layers away from the cause. (It looked
 fine locally, because a `file://` git dependency *does* take the clone path and *does* run
 `prepare`.)
 
@@ -62,11 +62,11 @@ version bump back, so it can't retrigger itself.
 `.github/workflows/ci.yml` runs lint/test/build plus both `dist/` guards on every PR, and
 prints the version a merge would cut. `.github/workflows/release.yml` re-runs all of it on
 merge to `main`, then creates the release — which creates the tag at that merge commit, so a
-tag always points at a verified tree. Each release carries `zupre-core-<version>.tgz` from
+tag always points at a verified tree. Each release carries `trellis-core-<version>.tgz` from
 `yarn pack`; that is an escape hatch, not the consumption path.
 
-**Nothing auto-bumps consumers.** A card repo pins `"@zupre/core":
-"github:gcrevell/trellis#v1.0.0"` and moves when it chooses to. That deliberate step is the
+**Nothing auto-bumps consumers.** A card repo pins `"@trellis/core":
+"github:gcrevell/trellis#v1.1.0"` and moves when it chooses to. That deliberate step is the
 point of leaving `#main` behind — `#main` is a moving target that silently re-resolves on
 every `yarn install`, so a card build was never reproducible and could never say which base
 it was built against.
@@ -109,10 +109,10 @@ ancestor; a plain test page without one will falsely look fine.
 
 ## Consuming this package
 
-A card repo depends on `@zupre/core` as an ordinary git dependency pinned to a tag:
+A card repo depends on `@trellis/core` as an ordinary git dependency pinned to a tag:
 
 ```json
-"@zupre/core": "github:gcrevell/trellis#v1.0.0"
+"@trellis/core": "github:gcrevell/trellis#v1.1.0"
 ```
 
 It resolves through **normal node_modules lookup** — no `compilerOptions.paths` mapping, no
@@ -123,7 +123,7 @@ this `src/` directory; that was the old arrangement, from when the base was a si
 workspace, and it is what the committed build replaces.
 
 Jest is the one exception. `packages/printer-card/jest.config.js` in the card repo maps
-`@zupre/core` to `@zupre/core/src/index.ts`, because tsc emits ES modules that Jest cannot
+`@trellis/core` to `@trellis/core/src/index.ts`, because tsc emits ES modules that Jest cannot
 `require` — `src/` is in the published `files` list for exactly this reason.
 
 `src/declarations.d.ts` declares the `ha-form` JSX intrinsic so this package type-checks
