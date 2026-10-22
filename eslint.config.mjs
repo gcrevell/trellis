@@ -1,3 +1,4 @@
+import { fixupPluginRules } from '@eslint/compat';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
@@ -8,7 +9,7 @@ export default tseslint.config(
   {
     files: ['src/**/*.{ts,tsx}'],
     plugins: {
-      react: reactPlugin,
+      react: fixupPluginRules(reactPlugin),
       'react-hooks': reactHooksPlugin,
     },
     rules: {
