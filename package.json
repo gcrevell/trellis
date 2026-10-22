@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "custom-card-helpers": "^2.0.0",
-    "preact": "^10.29.2",
+    "preact": "^11.0.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
