@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
+    "strict": false,
     "noImplicitAny": true,
     "module": "es6",
     "target": "es6",
+    "lib": ["es2020", "dom", "dom.iterable"],
     "allowJs": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "outDir": "./dist/",
-    "baseUrl": "."
+    "rootDir": "./src",
+    "outDir": "./dist/"
   },
   "include": ["src"]
 }
