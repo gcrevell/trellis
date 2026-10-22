@@ -2358,9 +2358,9 @@ hasown@^2.0.2, hasown@^2.0.3, hasown@^2.0.4:
     function-bind "^1.1.2"
 
 home-assistant-js-websocket@^9.6.0:
-  version "9.6.0"
-  resolved "https://registry.yarnpkg.com/home-assistant-js-websocket/-/home-assistant-js-websocket-9.6.0.tgz#46d1743276419e1bd78ba2bb51c6d5d0c0835f90"
-  integrity sha512-TK8HWW6UjCsUdjIBQRB2sBbEya0VniOBFqFjgqSznJiB7YriNgN8jghyThxOkgxwrnt2eN6oWoZMCTSp1o7H+w==
+  version "9.7.1"
+  resolved "https://registry.yarnpkg.com/home-assistant-js-websocket/-/home-assistant-js-websocket-9.7.1.tgz#d8522d50d44d1b18b505e854c650be75e95b6241"
+  integrity sha512-zOAiyF+gUc/IsiswYdWKns6SCBbvWb8iJtMX9+Dk0wlbdfcp+I38T2Vx36krWeWMk/GPwoSiYwCs5hk/+Hsn7w==
 
 hpack.js@^2.1.6:
   version "2.1.6"
