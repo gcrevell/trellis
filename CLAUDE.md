@@ -135,6 +135,18 @@ standard intrinsic (`div`, `span`, ...) across the whole consuming program.
 
 ## ESLint
 
-`eslint.config.mjs` is an ESLint 9 flat config using `typescript-eslint` (unified package) +
+`eslint.config.mjs` is an ESLint 10 flat config using `typescript-eslint` (unified package) +
 `eslint-plugin-react` + `eslint-plugin-react-hooks`, scoped to `src/**/*.{ts,tsx}`. No airbnb
-config — it doesn't support the flat config format.
+config — it doesn't support the flat config format. `eslint-plugin-react` still calls context
+methods ESLint 10 removed, so it's wrapped in `@eslint/compat`'s `fixupPluginRules`.
+
+## TypeScript
+
+TypeScript is held below 7 in `renovate.json`. TypeScript 7 is the native compiler and ships no
+`require('typescript')` API, which typescript-eslint needs here and ts-jest and ts-loader need in
+the card repo. Lift the hold once they support it.
+
+TypeScript 6 changed several defaults, and `tsconfig.json` pins the old ones: `strict: false`
+(`src/` isn't strict-clean, and the card repo's Jest compiles it under the card's options),
+`lib` (which `@types/node` used to widen to ES2020 implicitly), and `rootDir: "./src"` —
+without it TypeScript 6 emits to `dist/src/`, moving every path in the published package.
