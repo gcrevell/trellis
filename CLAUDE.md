@@ -23,9 +23,9 @@ reported it as `Can't resolve '@trellis/core'`, several layers away from the cau
 fine locally, because a `file://` git dependency *does* take the clone path and *does* run
 `prepare`.)
 
-Both workflows guard this: they build and then fail if the committed `dist/` differs from
-what was just built. If you change anything under `src/`, run `yarn build` and commit the
-result in the same change.
+Both `ci.yml` and the release job in `version.yml` guard this: they build and then fail if
+the committed `dist/` differs from what was just built. If you change anything under `src/`,
+run `yarn build` and commit the result in the same change.
 
 This repo was split out of [zupre](https://github.com/gcrevell/zupre), which held the base
 and the card products together in one yarn-workspaces monorepo. History before the split is
@@ -37,36 +37,26 @@ restructure) that live in the other repo — only their base-affecting changes a
 ```bash
 yarn install                    # also runs `prepare`, which builds dist/
 yarn lint                       # ESLint across src/
-yarn test                       # vitest run — src/ and scripts/
+yarn test                       # vitest run
 yarn build                      # tsc -p tsconfig.build.json -> dist/
-node scripts/release-plan.mjs   # what a merge to main would release, and why
 ```
 
 ## Versioning and releases
 
-Tagged `v<semver>`, one line for the whole package. **The released version lives in the git
-tag, not in a committed file** — `scripts/release-plan.mjs` decides it:
+Versioned like every other repo from the template: `.github/workflows/version.yml` tags every
+merge to `main` `vYYYY.M.N`, docs-only merges included. trellis was on semver up to `v1.1.10`;
+read as semver, `v2026.10.1` sorts above those, so nothing sees the switch as a downgrade.
+`package.json`'s `version` is ignored. It stays at `1.1.0` only because consumers' lockfiles
+record it.
 
-| Situation | Released version |
-|---|---|
-| No tag yet | `package.json`'s version (first release) |
-| PR left `package.json` alone | last tag with **patch + 1** |
-| PR set version *above* the last tag (1.1.0, 2.0.0) | exactly that version |
-| Nothing changed under `src/`, `dist/`, `webpack.base.js`, the tsconfigs, `package.json` or `yarn.lock` | skipped — a docs-only merge cuts no version |
-
-So `package.json`'s `version` is a *floor* — how a human asks for a minor or major bump —
-not a running total. It legitimately goes stale (it may say `1.0.0` while tags are at
-`1.0.7`); the tag is the source of truth. Deriving from tags means CI never commits a
-version bump back, so it can't retrigger itself.
-
-`.github/workflows/ci.yml` runs lint/test/build plus both `dist/` guards on every PR, and
-prints the version a merge would cut. `.github/workflows/release.yml` re-runs all of it on
-merge to `main`, then creates the release — which creates the tag at that merge commit, so a
-tag always points at a verified tree. Each release carries `trellis-core-<version>.tgz` from
-`yarn pack`; that is an escape hatch, not the consumption path.
+The release job in `version.yml` runs after the tag job, on the tag it just pushed: it
+re-runs lint, test, build and the `dist/` guard, then publishes a release carrying
+`trellis-core-<version>.tgz` from `yarn pack`. That tarball is an escape hatch, not the
+consumption path. The tag is pushed *before* that verification, so a tag whose release job
+failed has no release — pin only tags that have one.
 
 **Nothing auto-bumps consumers.** A card repo pins `"@trellis/core":
-"github:gcrevell/trellis#v1.1.0"` and moves when it chooses to. That deliberate step is the
+"github:gcrevell/trellis#v2026.10.1"` and moves when it chooses to. That deliberate step is the
 point of leaving `#main` behind — `#main` is a moving target that silently re-resolves on
 every `yarn install`, so a card build was never reproducible and could never say which base
 it was built against.
@@ -112,7 +102,7 @@ ancestor; a plain test page without one will falsely look fine.
 A card repo depends on `@trellis/core` as an ordinary git dependency pinned to a tag:
 
 ```json
-"@trellis/core": "github:gcrevell/trellis#v1.1.0"
+"@trellis/core": "github:gcrevell/trellis#v2026.10.1"
 ```
 
 It resolves through **normal node_modules lookup** — no `compilerOptions.paths` mapping, no

@@ -1,4 +1,4 @@
-# Pull-request checks. Pushes to main are covered by release.yml, which runs
+# Pull-request checks. Pushes to main are covered by version.yml, which runs
 # these same checks before it publishes anything.
 name: CI
 
@@ -14,10 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          # Full history + tags so the release preview below can compare this
-          # branch against the last release tag.
-          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
@@ -57,10 +53,3 @@ jobs:
             git diff -- dist
             exit 1
           fi
-
-      # Not a gate — prints the version this PR would release if merged, so an
-      # unintended major/minor bump is visible in the PR rather than after it.
-      - name: Release preview
-        run: |
-          git fetch --tags --force
-          node scripts/release-plan.mjs
