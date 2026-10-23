@@ -8,10 +8,11 @@ set of hooks over Home Assistant's state, an `<ha-form>` wrapper for card editor
 webpack config factory (`webpack.base.js`) that card packages call to get the loader rules
 and preact aliasing.
 
-Consumed as a git dependency pinned to a release tag:
+Consumed as a git dependency pinned to a [release](https://github.com/gcrevell/trellis/releases)
+tag:
 
 ```json
-"@trellis/core": "github:gcrevell/trellis#v1.1.0"
+"@trellis/core": "github:gcrevell/trellis#v2026.10.1"
 ```
 
 Compiled output is committed to `dist/` and shipped with the tag, so an install needs no

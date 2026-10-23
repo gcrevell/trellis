@@ -1,0 +1,87 @@
+# Tags every push to main with a CalVer version (vYYYY.M.N).
+# The logic lives in gcrevell/workflows.
+#
+# The release job then verifies the tagged tree and publishes a GitHub release
+# on the same tag. It has to live in this workflow rather than in one triggered
+# by the tag: a tag pushed with the automatic GITHUB_TOKEN deliberately does
+# not start other workflows.
+#
+# Consumers pin `github:gcrevell/trellis#<tag>`, which yarn fetches as a
+# codeload tarball of the tagged tree without building anything, so the
+# committed dist/ is what they get. A tag whose dist/ is stale gets a failed
+# run here rather than a release.
+
+name: Version
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  tag:
+    uses: gcrevell/workflows/.github/workflows/calver.yml@main
+    permissions:
+      contents: write
+
+  release:
+    name: Build and publish
+    needs: tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.tag.outputs.version }}
+          # The token reaches only the publish step, not yarn's install scripts.
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # main only accepts PRs, so this has already passed in CI. Repeated here
+      # because a release is the thing that escapes the repo -- it should never
+      # be cut from a tree that does not pass its own checks.
+      - name: Verify
+        run: |
+          yarn lint
+          yarn test
+          yarn build
+          test -f dist/index.js && test -f dist/index.d.ts
+
+      - name: dist/ is committed and current
+        run: |
+          if [ -n "$(git status --porcelain -- dist)" ]; then
+            echo "::error::dist/ does not match a fresh build. Run 'yarn build' and commit dist/."
+            git status --porcelain -- dist
+            git diff -- dist
+            exit 1
+          fi
+
+      # `files` in package.json controls what lands here: dist, src and
+      # webpack.base.js. Not the consumption path -- an escape hatch if a
+      # `github:` pin ever misbehaves again.
+      - name: Pack the tarball
+        env:
+          TAG: ${{ needs.tag.outputs.version }}
+        run: yarn pack --filename "trellis-core-${TAG#v}.tgz"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.tag.outputs.version }}
+        run: |
+          {
+            echo '```json'
+            echo "\"@trellis/core\": \"github:gcrevell/trellis#${TAG}\""
+            echo '```'
+          } > RELEASE_NOTES.md
+          gh release create "$TAG" --verify-tag --title "$TAG" \
+            --notes-file RELEASE_NOTES.md --generate-notes \
+            "trellis-core-${TAG#v}.tgz"

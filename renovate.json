@@ -1,8 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "group:all"
   ],
+  "schedule": [
+    "* * * * 6"
+  ],
+  "prConcurrentLimit": 1,
   "packageRules": [
     {
       "description": "TypeScript 7 ships no JS compiler API, which typescript-eslint, ts-jest and ts-loader need. See CLAUDE.md.",
