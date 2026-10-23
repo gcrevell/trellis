@@ -127,7 +127,7 @@ jobs:
 
       - name: Publish the release
         if: steps.plan.outputs.version != ''
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.plan.outputs.version }}
           name: v${{ steps.plan.outputs.version }}
